@@ -4,8 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <title>Coverflow Flipbook</title>
+    <!-- Swiper CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
     <style>
+        /* General body and HTML styles */
         html, body {
             margin: 0;
             padding: 0;
@@ -15,6 +17,7 @@
             touch-action: none;
         }
 
+        /* Swiper container and its initial state */
         .swiper {
             width: 100vw;
             height: 100vh;
@@ -25,10 +28,12 @@
             transition: opacity 0.2s ease-in;
         }
 
+        /* Fades in the swiper once it's loaded */
         .swiper.swiper-loaded {
             opacity: 1;
         }
 
+        /* Styles for each slide */
         .swiper-slide {
             width: auto;
             height: auto;
@@ -37,6 +42,7 @@
             justify-content: center;
         }
 
+        /* Inner container for the image */
         .slide-inner {
             display: flex;
             align-items: center;
@@ -45,6 +51,7 @@
             height: 100%;
         }
 
+        /* Image styles: responsive, rounded corners, and shadow */
         .slide-inner img {
             width: auto;
             height: auto;
@@ -54,21 +61,30 @@
             border-radius: 12px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
             transition: transform 0.2s ease;
-            will-change: transform;
             cursor: pointer;
             touch-action: none;
         }
 
+        /* CSS animation for the first page */
         .page1-breath {
             animation: breatheZoom 1.4s ease-out 1;
         }
 
         @keyframes breatheZoom {
-            0% { transform: scale(1) brightness(0.3); opacity: 0; }
-            60% { transform: scale(1.03) brightness(1.2); opacity: 1; }
-            100% { transform: scale(1) brightness(1); }
+            0% {
+                transform: scale(1) brightness(0.3);
+                opacity: 0;
+            }
+            60% {
+                transform: scale(1.03) brightness(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1) brightness(1);
+            }
         }
 
+        /* Swiper navigation buttons styling */
         .swiper-button-next,
         .swiper-button-prev {
             color: white;
@@ -83,6 +99,7 @@
             font-size: 22px;
         }
 
+        /* Responsive adjustments for mobile devices */
         @media (max-width: 768px) {
             .slide-inner img {
                 max-height: 80vh;
@@ -99,6 +116,7 @@
         <div class="swiper-button-prev"></div>
     </div>
 
+    <!-- Swiper JS library -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
     <script>
         const wrapper = document.getElementById('swiperWrapper');
@@ -106,6 +124,10 @@
         const MAX_PAGES = 60;
         let stopLoading = false;
 
+        /**
+         * Preloads images and appends slides to the Swiper wrapper.
+         * This function handles potential errors if an image URL is not found.
+         */
         async function preloadImagesAndAppendSlides() {
             for (let i = 1; i <= MAX_PAGES; i++) {
                 if (stopLoading) break;
@@ -126,6 +148,7 @@
                         resolve();
                     };
                     img.onerror = () => {
+                        console.error(`Failed to load image: pages/page${i}.jpg`);
                         stopLoading = true;
                         resolve();
                     };
@@ -133,6 +156,10 @@
             }
         }
 
+        /**
+         * Checks if the user is on an iOS device to adjust Swiper settings.
+         * @returns {boolean} True if the device is iOS, false otherwise.
+         */
         function isIOS() {
             return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         }
@@ -149,8 +176,8 @@
                 watchSlidesProgress: true,
                 initialSlide: 0,
                 speed: isIOS() ? 600 : 400,
-                touchRatio: isIOS() ? 0.6 : 1,
-                threshold: isIOS() ? 10 : 5,
+                touchRatio: 1,
+                threshold: 10,
                 coverflowEffect: {
                     rotate: isIOS() ? 5 : 8,
                     stretch: isIOS() ? 0 : -10,
@@ -176,9 +203,11 @@
                             const page1 = document.querySelector('.page1-img');
                             if (page1) page1.classList.add('page1-breath');
                         }, 100);
+                        setupZoomPan(this.slides[this.activeIndex].querySelector('img'));
                     },
                     slideChange: function () {
-                        resetZoom();
+                        // Reset zoom and setup listeners for the new slide
+                        setupZoomPan(this.slides[this.activeIndex].querySelector('img'));
                     }
                 }
             });
@@ -191,32 +220,39 @@
         let startX = 0, startY = 0;
         let offsetX = 0, offsetY = 0;
 
-        function updateSwiperTouchStatus() {
-            if (!swiper) return;
-            swiper.allowTouchMove = scale === 1;
-        }
-
+        /**
+         * Resets the zoom and pan state of the active image.
+         */
         function resetZoom() {
-            document.querySelectorAll('.swiper-slide img').forEach(img => {
-                img.style.transform = 'scale(1) translate(0px, 0px)';
-            });
+            if (activeImage) {
+                // Important: Reset the transform to an empty string to remove our custom styling
+                // and allow Swiper to take over for the non-active slides.
+                activeImage.style.transform = '';
+            }
             scale = 1; offsetX = 0; offsetY = 0;
-            activeImage = null;
             isDragging = false;
-            updateSwiperTouchStatus();
+            if (swiper) swiper.allowTouchMove = true;
         }
 
+        /**
+         * Updates the transform property of the active image for zoom and pan.
+         */
         function updateTransform() {
             if (activeImage) {
-                activeImage.style.transform = `scale(${scale}) translate(${offsetX / scale}px, ${offsetY / scale}px)`;
-                updateSwiperTouchStatus();
+                if (scale > 1) {
+                    activeImage.style.transform = `scale(${scale}) translate(${offsetX / scale}px, ${offsetY / scale}px)`;
+                } else {
+                    activeImage.style.transform = '';
+                }
             }
         }
 
+        // --- Mouse-based event listeners for zoom and pan ---
         document.addEventListener('wheel', function (e) {
             if (e.ctrlKey) {
                 e.preventDefault();
                 activeImage = document.querySelector('.swiper-slide-active img');
+                if (!activeImage) return;
                 scale += e.deltaY * -0.002;
                 scale = Math.min(Math.max(1, scale), 3);
                 offsetX = 0;
@@ -236,12 +272,12 @@
         });
 
         document.addEventListener('mousedown', function (e) {
-            if (scale === 1) return;
             activeImage = document.querySelector('.swiper-slide-active img');
-            if (!activeImage) return;
+            if (!activeImage || scale === 1) return;
             isDragging = true;
             startX = e.clientX - offsetX;
             startY = e.clientY - offsetY;
+            if (swiper) swiper.allowTouchMove = false;
         });
 
         document.addEventListener('mousemove', function (e) {
@@ -253,11 +289,11 @@
 
         document.addEventListener('mouseup', function () {
             isDragging = false;
+            if (scale === 1 && swiper) swiper.allowTouchMove = true;
         });
 
-        // --- Touch Zoom + Pan + Double Tap ---
+        // --- Touch-based event listeners for pinch-zoom and pan ---
         let initialDistance = null;
-        let touchZoomImage = null;
         let lastTapTime = 0;
 
         function getDistance(touches) {
@@ -266,74 +302,88 @@
             return Math.sqrt(dx * dx + dy * dy);
         }
 
-        document.addEventListener('touchstart', function (e) {
+        function handleTouchStart(e) {
             const now = new Date().getTime();
-
-            // Two-finger pinch to zoom
             if (e.touches.length === 2) {
                 initialDistance = getDistance(e.touches);
-                touchZoomImage = document.querySelector('.swiper-slide-active img');
-                // Don't prevent default here, let touchmove handle it
-            } 
-            // Single-finger gestures
-            else if (e.touches.length === 1) {
-                // Double tap to toggle zoom
+                if (swiper) swiper.allowTouchMove = false;
+            } else if (e.touches.length === 1) {
                 const timeSinceLastTap = now - lastTapTime;
                 lastTapTime = now;
-                if (timeSinceLastTap < 300) {
-                    e.preventDefault(); 
-                    const img = document.querySelector('.swiper-slide-active img');
-                    if (img) {
-                        scale = scale === 1 ? 2 : 1;
-                        offsetX = 0;
-                        offsetY = 0;
-                        img.style.transform = `scale(${scale}) translate(0px, 0px)`;
-                        updateSwiperTouchStatus();
-                    }
+                if (timeSinceLastTap < 300) { // Double tap logic
+                    e.preventDefault();
+                    e.stopPropagation();
+                    scale = scale === 1 ? 2 : 1;
+                    offsetX = 0;
+                    offsetY = 0;
+                    updateTransform();
+                    if (swiper) swiper.allowTouchMove = (scale === 1);
                 }
-                // Single-finger pan on zoomed image
-                if (scale > 1) {
-                    activeImage = document.querySelector('.swiper-slide-active img');
+                if (scale > 1) { // Pan logic
                     isDragging = true;
                     startX = e.touches[0].clientX - offsetX;
                     startY = e.touches[0].clientY - offsetY;
-                    // Prevent default to enable panning, blocking Swiper
-                    e.preventDefault(); 
+                    e.stopPropagation();
+                    if (swiper) swiper.allowTouchMove = false;
                 }
             }
-        }, { passive: false });
+        }
 
-        document.addEventListener('touchmove', function (e) {
-            // Two-finger pinch to zoom
-            if (e.touches.length === 2 && initialDistance && touchZoomImage) {
-                e.preventDefault(); // Prevent default only for two-finger zoom
+        function handleTouchMove(e) {
+            if (e.touches.length === 2 && initialDistance) { // Pinch-to-zoom
+                e.preventDefault();
+                e.stopPropagation();
                 const currentDistance = getDistance(e.touches);
                 const delta = (currentDistance - initialDistance) * 0.005;
                 scale += delta;
                 scale = Math.min(Math.max(1, scale), 3);
                 offsetX = 0;
                 offsetY = 0;
-                touchZoomImage.style.transform = `scale(${scale}) translate(0px, 0px)`;
+                updateTransform();
                 initialDistance = currentDistance;
-                updateSwiperTouchStatus();
             }
-            // Single-finger pan on zoomed image
-            else if (e.touches.length === 1 && scale > 1 && isDragging) {
-                e.preventDefault(); // Prevent default only for single-finger pan
+            else if (e.touches.length === 1 && scale > 1 && isDragging) { // Pan
+                e.preventDefault();
+                e.stopPropagation();
                 const touch = e.touches[0];
                 offsetX = touch.clientX - startX;
                 offsetY = touch.clientY - startY;
                 updateTransform();
             }
-        }, { passive: false });
+        }
 
-        document.addEventListener('touchend', () => {
+        function handleTouchEnd() {
             isDragging = false;
             initialDistance = null;
-            touchZoomImage = null;
-            updateSwiperTouchStatus();
-        });
+            if (scale === 1 && swiper) swiper.allowTouchMove = true;
+        }
+        
+        /**
+         * Sets up the touch and mouse event listeners for the given image element.
+         * This function is crucial for preventing conflicts by only listening on the active slide.
+         * @param {HTMLElement} imgElement The image element of the currently active slide.
+         */
+        function setupZoomPan(imgElement) {
+            if (!imgElement) return;
 
+            // Remove old listeners to prevent duplication
+            if (activeImage) {
+                activeImage.removeEventListener('touchstart', handleTouchStart);
+                activeImage.removeEventListener('touchmove', handleTouchMove);
+                activeImage.removeEventListener('touchend', handleTouchEnd);
+            }
+
+            // Set the new active image and reset its state
+            activeImage = imgElement;
+            resetZoom();
+
+            // Add new listeners to the currently active image
+            activeImage.addEventListener('touchstart', handleTouchStart, { passive: false });
+            activeImage.addEventListener('touchmove', handleTouchMove, { passive: false });
+            activeImage.addEventListener('touchend', handleTouchEnd);
+        }
+
+        // Recalculates the Swiper layout on orientation change
         window.addEventListener('orientationchange', () => {
             setTimeout(() => {
                 if (swiper) swiper.update();
