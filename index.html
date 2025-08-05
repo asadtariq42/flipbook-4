@@ -124,7 +124,8 @@
             wrapper.appendChild(slide);
             resolve();
           };
-          img.onerror = () => {
+          img.onerror = (e) => {
+            console.error(`Image failed to load: pages/page${i}.jpg`);
             stopLoading = true;
             resolve();
           };
@@ -268,7 +269,7 @@
         const timeSinceLastTap = now - lastTapTime;
         lastTapTime = now;
         if (timeSinceLastTap < 300) {
-          e.preventDefault();  // <- Fixes bounce on double-tap
+          e.preventDefault();
           const img = document.querySelector('.swiper-slide-active img');
           if (img) {
             scale = scale === 1 ? 2 : 1;
@@ -279,7 +280,7 @@
           }
         }
       }
-    }, { passive: false }); // <-- Passive false ensures preventDefault works
+    }, { passive: false });
 
     document.addEventListener('touchmove', function (e) {
       if (e.touches.length === 2 && initialDistance && touchZoomImage) {
