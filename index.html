@@ -13,6 +13,8 @@
       overflow: hidden;
       background: #111;
       touch-action: none;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: auto;
     }
 
     .swiper {
@@ -23,6 +25,7 @@
       justify-content: center;
       opacity: 0;
       transition: opacity 0.2s ease-in;
+      touch-action: pan-y !important;
     }
 
     .swiper.swiper-loaded {
@@ -124,8 +127,7 @@
             wrapper.appendChild(slide);
             resolve();
           };
-          img.onerror = (e) => {
-            console.error(`Image failed to load: pages/page${i}.jpg`);
+          img.onerror = () => {
             stopLoading = true;
             resolve();
           };
@@ -186,17 +188,19 @@
 
     function updateSwiperTouchStatus() {
       if (!swiper) return;
-      swiper.allowTouchMove = scale === 1;
+      swiper.allowTouchMove = Math.abs(scale - 1) < 0.001;
     }
 
     function resetZoom() {
       document.querySelectorAll('.swiper-slide img').forEach(img => {
         img.style.transform = 'scale(1) translate(0px, 0px)';
       });
-      scale = 1; offsetX = 0; offsetY = 0;
+      scale = 1;
+      offsetX = 0;
+      offsetY = 0;
       activeImage = null;
       isDragging = false;
-      updateSwiperTouchStatus();
+      swiper.allowTouchMove = true;
     }
 
     function updateTransform() {
