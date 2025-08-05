@@ -13,8 +13,6 @@
       overflow: hidden;
       background: #111;
       touch-action: none;
-      overscroll-behavior: contain;
-      -webkit-overflow-scrolling: auto;
     }
 
     .swiper {
@@ -25,7 +23,6 @@
       justify-content: center;
       opacity: 0;
       transition: opacity 0.2s ease-in;
-      touch-action: pan-y !important;
     }
 
     .swiper.swiper-loaded {
@@ -57,6 +54,7 @@
       border-radius: 12px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
       transition: transform 0.2s ease;
+      will-change: transform;
       cursor: pointer;
       touch-action: none;
     }
@@ -135,6 +133,10 @@
       }
     }
 
+    function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    }
+
     let swiper;
     window.addEventListener('load', async () => {
       await preloadImagesAndAppendSlides();
@@ -146,10 +148,13 @@
         slideToClickedSlide: true,
         watchSlidesProgress: true,
         initialSlide: 0,
+        speed: isIOS() ? 600 : 400,
+        touchRatio: isIOS() ? 0.6 : 1,
+        threshold: isIOS() ? 10 : 5,
         coverflowEffect: {
-          rotate: 8,
-          stretch: -10,
-          depth: 220,
+          rotate: isIOS() ? 5 : 8,
+          stretch: isIOS() ? 0 : -10,
+          depth: isIOS() ? 120 : 220,
           modifier: 1,
           slideShadows: true
         },
@@ -179,7 +184,7 @@
       });
     });
 
-    // --- Zoom + Pan Logic ---
+    // --- Zoom + Pan Logic (unchanged) ---
     let scale = 1;
     let activeImage = null;
     let isDragging = false;
@@ -188,19 +193,17 @@
 
     function updateSwiperTouchStatus() {
       if (!swiper) return;
-      swiper.allowTouchMove = Math.abs(scale - 1) < 0.001;
+      swiper.allowTouchMove = scale === 1;
     }
 
     function resetZoom() {
       document.querySelectorAll('.swiper-slide img').forEach(img => {
         img.style.transform = 'scale(1) translate(0px, 0px)';
       });
-      scale = 1;
-      offsetX = 0;
-      offsetY = 0;
+      scale = 1; offsetX = 0; offsetY = 0;
       activeImage = null;
       isDragging = false;
-      swiper.allowTouchMove = true;
+      updateSwiperTouchStatus();
     }
 
     function updateTransform() {
@@ -252,7 +255,7 @@
       isDragging = false;
     });
 
-    // --- Pinch Zoom + Double Tap ---
+    // --- Touch Zoom + Pan + Double Tap ---
     let initialDistance = null;
     let touchZoomImage = null;
     let lastTapTime = 0;
