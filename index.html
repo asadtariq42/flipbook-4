@@ -1,335 +1,344 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-  <title>Coverflow Flipbook</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow: hidden;
-      background: #111;
-      touch-action: none;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <title>Coverflow Flipbook</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background: #111;
+            touch-action: none;
+        }
 
-    .swiper {
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.2s ease-in;
-    }
+        .swiper {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s ease-in;
+        }
 
-    .swiper.swiper-loaded {
-      opacity: 1;
-    }
+        .swiper.swiper-loaded {
+            opacity: 1;
+        }
 
-    .swiper-slide {
-      width: auto;
-      height: auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+        .swiper-slide {
+            width: auto;
+            height: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    .slide-inner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-    }
+        .slide-inner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
 
-    .slide-inner img {
-      width: auto;
-      height: auto;
-      max-height: 90vh;
-      max-width: 90vw;
-      object-fit: contain;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-      transition: transform 0.2s ease;
-      will-change: transform;
-      cursor: pointer;
-      touch-action: none;
-    }
+        .slide-inner img {
+            width: auto;
+            height: auto;
+            max-height: 90vh;
+            max-width: 90vw;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s ease;
+            will-change: transform;
+            cursor: pointer;
+            touch-action: none;
+        }
 
-    .page1-breath {
-      animation: breatheZoom 1.4s ease-out 1;
-    }
+        .page1-breath {
+            animation: breatheZoom 1.4s ease-out 1;
+        }
 
-    @keyframes breatheZoom {
-      0% { transform: scale(1) brightness(0.3); opacity: 0; }
-      60% { transform: scale(1.03) brightness(1.2); opacity: 1; }
-      100% { transform: scale(1) brightness(1); }
-    }
+        @keyframes breatheZoom {
+            0% { transform: scale(1) brightness(0.3); opacity: 0; }
+            60% { transform: scale(1.03) brightness(1.2); opacity: 1; }
+            100% { transform: scale(1) brightness(1); }
+        }
 
-    .swiper-button-next,
-    .swiper-button-prev {
-      color: white;
-      width: 38px;
-      height: 38px;
-      background-color: transparent;
-      border-radius: 50%;
-    }
+        .swiper-button-next,
+        .swiper-button-prev {
+            color: white;
+            width: 38px;
+            height: 38px;
+            background-color: transparent;
+            border-radius: 50%;
+        }
 
-    .swiper-button-next::after,
-    .swiper-button-prev::after {
-      font-size: 22px;
-    }
+        .swiper-button-next::after,
+        .swiper-button-prev::after {
+            font-size: 22px;
+        }
 
-    @media (max-width: 768px) {
-      .slide-inner img {
-        max-height: 80vh;
-        max-width: 95vw;
-      }
-    }
-  </style>
+        @media (max-width: 768px) {
+            .slide-inner img {
+                max-height: 80vh;
+                max-width: 95vw;
+            }
+        }
+    </style>
 </head>
 <body>
 
-  <div class="swiper" id="swiperContainer" style="visibility: hidden;">
-    <div class="swiper-wrapper" id="swiperWrapper"></div>
-    <div class="swiper-button-next"></div>
-    <div class="swiper-button-prev"></div>
-  </div>
+    <div class="swiper" id="swiperContainer" style="visibility: hidden;">
+        <div class="swiper-wrapper" id="swiperWrapper"></div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+    </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
-  <script>
-    const wrapper = document.getElementById('swiperWrapper');
-    const container = document.getElementById('swiperContainer');
-    const MAX_PAGES = 60;
-    let stopLoading = false;
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+    <script>
+        const wrapper = document.getElementById('swiperWrapper');
+        const container = document.getElementById('swiperContainer');
+        const MAX_PAGES = 60;
+        let stopLoading = false;
 
-    async function preloadImagesAndAppendSlides() {
-      for (let i = 1; i <= MAX_PAGES; i++) {
-        if (stopLoading) break;
-        const img = new Image();
-        img.src = `pages/page${i}.jpg`;
+        async function preloadImagesAndAppendSlides() {
+            for (let i = 1; i <= MAX_PAGES; i++) {
+                if (stopLoading) break;
+                const img = new Image();
+                img.src = `pages/page${i}.jpg`;
 
-        await new Promise((resolve) => {
-          img.onload = () => {
-            const slide = document.createElement('div');
-            slide.className = 'swiper-slide';
-            const imgClass = i === 1 ? 'page1-img' : '';
-            slide.innerHTML = `
-              <div class="slide-inner">
-                <img src="pages/page${i}.jpg" data-index="${i}" class="${imgClass}" />
-              </div>
-            `;
-            wrapper.appendChild(slide);
-            resolve();
-          };
-          img.onerror = () => {
-            stopLoading = true;
-            resolve();
-          };
+                await new Promise((resolve) => {
+                    img.onload = () => {
+                        const slide = document.createElement('div');
+                        slide.className = 'swiper-slide';
+                        const imgClass = i === 1 ? 'page1-img' : '';
+                        slide.innerHTML = `
+                            <div class="slide-inner">
+                                <img src="pages/page${i}.jpg" data-index="${i}" class="${imgClass}" />
+                            </div>
+                        `;
+                        wrapper.appendChild(slide);
+                        resolve();
+                    };
+                    img.onerror = () => {
+                        stopLoading = true;
+                        resolve();
+                    };
+                });
+            }
+        }
+
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+
+        let swiper;
+        window.addEventListener('load', async () => {
+            await preloadImagesAndAppendSlides();
+            swiper = new Swiper('.swiper', {
+                effect: 'coverflow',
+                grabCursor: true,
+                centeredSlides: true,
+                slidesPerView: 'auto',
+                slideToClickedSlide: true,
+                watchSlidesProgress: true,
+                initialSlide: 0,
+                speed: isIOS() ? 600 : 400,
+                touchRatio: isIOS() ? 0.6 : 1,
+                threshold: isIOS() ? 10 : 5,
+                coverflowEffect: {
+                    rotate: isIOS() ? 5 : 8,
+                    stretch: isIOS() ? 0 : -10,
+                    depth: isIOS() ? 120 : 220,
+                    modifier: 1,
+                    slideShadows: true
+                },
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+                keyboard: {
+                    enabled: true,
+                    onlyInViewport: true,
+                },
+                loop: false,
+                on: {
+                    init: function () {
+                        this.slideTo(0, 0, false);
+                        container.style.visibility = 'visible';
+                        container.classList.add('swiper-loaded');
+                        setTimeout(() => {
+                            const page1 = document.querySelector('.page1-img');
+                            if (page1) page1.classList.add('page1-breath');
+                        }, 100);
+                    },
+                    slideChange: function () {
+                        resetZoom();
+                    }
+                }
+            });
         });
-      }
-    }
 
-    function isIOS() {
-      return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    }
+        // --- Zoom + Pan Logic ---
+        let scale = 1;
+        let activeImage = null;
+        let isDragging = false;
+        let startX = 0, startY = 0;
+        let offsetX = 0, offsetY = 0;
 
-    let swiper;
-    window.addEventListener('load', async () => {
-      await preloadImagesAndAppendSlides();
-      swiper = new Swiper('.swiper', {
-        effect: 'coverflow',
-        grabCursor: true,
-        centeredSlides: true,
-        slidesPerView: 'auto',
-        slideToClickedSlide: true,
-        watchSlidesProgress: true,
-        initialSlide: 0,
-        speed: isIOS() ? 600 : 400,
-        touchRatio: isIOS() ? 0.6 : 1,
-        threshold: isIOS() ? 10 : 5,
-        coverflowEffect: {
-          rotate: isIOS() ? 5 : 8,
-          stretch: isIOS() ? 0 : -10,
-          depth: isIOS() ? 120 : 220,
-          modifier: 1,
-          slideShadows: true
-        },
-        navigation: {
-          nextEl: '.swiper-button-next',
-          prevEl: '.swiper-button-prev',
-        },
-        keyboard: {
-          enabled: true,
-          onlyInViewport: true,
-        },
-        loop: false,
-        on: {
-          init: function () {
-            this.slideTo(0, 0, false);
-            container.style.visibility = 'visible';
-            container.classList.add('swiper-loaded');
-            setTimeout(() => {
-              const page1 = document.querySelector('.page1-img');
-              if (page1) page1.classList.add('page1-breath');
-            }, 100);
-          },
-          slideChange: function () {
-            resetZoom();
-          }
+        function updateSwiperTouchStatus() {
+            if (!swiper) return;
+            swiper.allowTouchMove = scale === 1;
         }
-      });
-    });
 
-    // --- Zoom + Pan Logic (unchanged) ---
-    let scale = 1;
-    let activeImage = null;
-    let isDragging = false;
-    let startX = 0, startY = 0;
-    let offsetX = 0, offsetY = 0;
-
-    function updateSwiperTouchStatus() {
-      if (!swiper) return;
-      swiper.allowTouchMove = scale === 1;
-    }
-
-    function resetZoom() {
-      document.querySelectorAll('.swiper-slide img').forEach(img => {
-        img.style.transform = 'scale(1) translate(0px, 0px)';
-      });
-      scale = 1; offsetX = 0; offsetY = 0;
-      activeImage = null;
-      isDragging = false;
-      updateSwiperTouchStatus();
-    }
-
-    function updateTransform() {
-      if (activeImage) {
-        activeImage.style.transform = `scale(${scale}) translate(${offsetX / scale}px, ${offsetY / scale}px)`;
-        updateSwiperTouchStatus();
-      }
-    }
-
-    document.addEventListener('wheel', function (e) {
-      if (e.ctrlKey) {
-        e.preventDefault();
-        activeImage = document.querySelector('.swiper-slide-active img');
-        scale += e.deltaY * -0.002;
-        scale = Math.min(Math.max(1, scale), 3);
-        offsetX = 0;
-        offsetY = 0;
-        updateTransform();
-      }
-    }, { passive: false });
-
-    document.addEventListener('dblclick', () => {
-      activeImage = document.querySelector('.swiper-slide-active img');
-      if (activeImage) {
-        scale = scale === 1 ? 2 : 1;
-        offsetX = 0;
-        offsetY = 0;
-        updateTransform();
-      }
-    });
-
-    document.addEventListener('mousedown', function (e) {
-      if (scale === 1) return;
-      activeImage = document.querySelector('.swiper-slide-active img');
-      if (!activeImage) return;
-      isDragging = true;
-      startX = e.clientX - offsetX;
-      startY = e.clientY - offsetY;
-    });
-
-    document.addEventListener('mousemove', function (e) {
-      if (!isDragging || scale === 1) return;
-      offsetX = e.clientX - startX;
-      offsetY = e.clientY - startY;
-      updateTransform();
-    });
-
-    document.addEventListener('mouseup', function () {
-      isDragging = false;
-    });
-
-    // --- Touch Zoom + Pan + Double Tap ---
-    let initialDistance = null;
-    let touchZoomImage = null;
-    let lastTapTime = 0;
-
-    function getDistance(touches) {
-      const dx = touches[0].clientX - touches[1].clientX;
-      const dy = touches[0].clientY - touches[1].clientY;
-      return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    document.addEventListener('touchstart', function (e) {
-      const now = new Date().getTime();
-
-      if (e.touches.length === 2) {
-        initialDistance = getDistance(e.touches);
-        touchZoomImage = document.querySelector('.swiper-slide-active img');
-      } else if (e.touches.length === 1) {
-        const timeSinceLastTap = now - lastTapTime;
-        lastTapTime = now;
-        if (timeSinceLastTap < 300) {
-          e.preventDefault();
-          const img = document.querySelector('.swiper-slide-active img');
-          if (img) {
-            scale = scale === 1 ? 2 : 1;
-            offsetX = 0;
-            offsetY = 0;
-            img.style.transform = `scale(${scale}) translate(0px, 0px)`;
+        function resetZoom() {
+            document.querySelectorAll('.swiper-slide img').forEach(img => {
+                img.style.transform = 'scale(1) translate(0px, 0px)';
+            });
+            scale = 1; offsetX = 0; offsetY = 0;
+            activeImage = null;
+            isDragging = false;
             updateSwiperTouchStatus();
-          }
         }
-      }
-    }, { passive: false });
 
-    document.addEventListener('touchmove', function (e) {
-      if (e.touches.length === 2 && initialDistance && touchZoomImage) {
-        const currentDistance = getDistance(e.touches);
-        const delta = (currentDistance - initialDistance) * 0.005;
-        scale += delta;
-        scale = Math.min(Math.max(1, scale), 3);
-        offsetX = 0;
-        offsetY = 0;
-        touchZoomImage.style.transform = `scale(${scale}) translate(0px, 0px)`;
-        initialDistance = currentDistance;
-        updateSwiperTouchStatus();
-        e.preventDefault();
-      }
-
-      if (e.touches.length === 1 && scale > 1) {
-        const touch = e.touches[0];
-        activeImage = document.querySelector('.swiper-slide-active img');
-        if (!isDragging) {
-          isDragging = true;
-          startX = touch.clientX - offsetX;
-          startY = touch.clientY - offsetY;
-        } else {
-          offsetX = touch.clientX - startX;
-          offsetY = touch.clientY - startY;
-          updateTransform();
+        function updateTransform() {
+            if (activeImage) {
+                activeImage.style.transform = `scale(${scale}) translate(${offsetX / scale}px, ${offsetY / scale}px)`;
+                updateSwiperTouchStatus();
+            }
         }
-        e.preventDefault();
-      }
-    }, { passive: false });
 
-    document.addEventListener('touchend', () => {
-      isDragging = false;
-      initialDistance = null;
-      touchZoomImage = null;
-    });
+        document.addEventListener('wheel', function (e) {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                activeImage = document.querySelector('.swiper-slide-active img');
+                scale += e.deltaY * -0.002;
+                scale = Math.min(Math.max(1, scale), 3);
+                offsetX = 0;
+                offsetY = 0;
+                updateTransform();
+            }
+        }, { passive: false });
 
-    window.addEventListener('orientationchange', () => {
-      setTimeout(() => {
-        if (swiper) swiper.update();
-      }, 500);
-    });
-  </script>
+        document.addEventListener('dblclick', () => {
+            activeImage = document.querySelector('.swiper-slide-active img');
+            if (activeImage) {
+                scale = scale === 1 ? 2 : 1;
+                offsetX = 0;
+                offsetY = 0;
+                updateTransform();
+            }
+        });
+
+        document.addEventListener('mousedown', function (e) {
+            if (scale === 1) return;
+            activeImage = document.querySelector('.swiper-slide-active img');
+            if (!activeImage) return;
+            isDragging = true;
+            startX = e.clientX - offsetX;
+            startY = e.clientY - offsetY;
+        });
+
+        document.addEventListener('mousemove', function (e) {
+            if (!isDragging || scale === 1) return;
+            offsetX = e.clientX - startX;
+            offsetY = e.clientY - startY;
+            updateTransform();
+        });
+
+        document.addEventListener('mouseup', function () {
+            isDragging = false;
+        });
+
+        // --- Touch Zoom + Pan + Double Tap ---
+        let initialDistance = null;
+        let touchZoomImage = null;
+        let lastTapTime = 0;
+
+        function getDistance(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        document.addEventListener('touchstart', function (e) {
+            const now = new Date().getTime();
+
+            // Two-finger pinch to zoom
+            if (e.touches.length === 2) {
+                initialDistance = getDistance(e.touches);
+                touchZoomImage = document.querySelector('.swiper-slide-active img');
+                // Don't prevent default here, let touchmove handle it
+            } 
+            // Single-finger gestures
+            else if (e.touches.length === 1) {
+                // Double tap to toggle zoom
+                const timeSinceLastTap = now - lastTapTime;
+                lastTapTime = now;
+                if (timeSinceLastTap < 300) {
+                    e.preventDefault(); 
+                    const img = document.querySelector('.swiper-slide-active img');
+                    if (img) {
+                        scale = scale === 1 ? 2 : 1;
+                        offsetX = 0;
+                        offsetY = 0;
+                        img.style.transform = `scale(${scale}) translate(0px, 0px)`;
+                        updateSwiperTouchStatus();
+                    }
+                }
+                // Single-finger pan on zoomed image
+                if (scale > 1) {
+                    activeImage = document.querySelector('.swiper-slide-active img');
+                    isDragging = true;
+                    startX = e.touches[0].clientX - offsetX;
+                    startY = e.touches[0].clientY - offsetY;
+                    // Prevent default to enable panning, blocking Swiper
+                    e.preventDefault(); 
+                }
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchmove', function (e) {
+            // Two-finger pinch to zoom
+            if (e.touches.length === 2 && initialDistance && touchZoomImage) {
+                e.preventDefault(); // Prevent default only for two-finger zoom
+                const currentDistance = getDistance(e.touches);
+                const delta = (currentDistance - initialDistance) * 0.005;
+                scale += delta;
+                scale = Math.min(Math.max(1, scale), 3);
+                offsetX = 0;
+                offsetY = 0;
+                touchZoomImage.style.transform = `scale(${scale}) translate(0px, 0px)`;
+                initialDistance = currentDistance;
+                updateSwiperTouchStatus();
+            }
+            // Single-finger pan on zoomed image
+            else if (e.touches.length === 1 && scale > 1 && isDragging) {
+                e.preventDefault(); // Prevent default only for single-finger pan
+                const touch = e.touches[0];
+                offsetX = touch.clientX - startX;
+                offsetY = touch.clientY - startY;
+                updateTransform();
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchend', () => {
+            isDragging = false;
+            initialDistance = null;
+            touchZoomImage = null;
+            updateSwiperTouchStatus();
+        });
+
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                if (swiper) swiper.update();
+            }, 500);
+        });
+    </script>
 </body>
 </html>
