@@ -63,17 +63,9 @@
     }
 
     @keyframes breatheZoom {
-      0% {
-        transform: scale(1) brightness(0.3);
-        opacity: 0;
-      }
-      60% {
-        transform: scale(1.03) brightness(1.2);
-        opacity: 1;
-      }
-      100% {
-        transform: scale(1) brightness(1);
-      }
+      0% { transform: scale(1) brightness(0.3); opacity: 0; }
+      60% { transform: scale(1.03) brightness(1.2); opacity: 1; }
+      100% { transform: scale(1) brightness(1); }
     }
 
     .swiper-button-next,
@@ -110,14 +102,12 @@
   <script>
     const wrapper = document.getElementById('swiperWrapper');
     const container = document.getElementById('swiperContainer');
-
     const MAX_PAGES = 60;
     let stopLoading = false;
 
     async function preloadImagesAndAppendSlides() {
       for (let i = 1; i <= MAX_PAGES; i++) {
         if (stopLoading) break;
-
         const img = new Image();
         img.src = `pages/page${i}.jpg`;
 
@@ -125,7 +115,6 @@
           img.onload = () => {
             const slide = document.createElement('div');
             slide.className = 'swiper-slide';
-
             const imgClass = i === 1 ? 'page1-img' : '';
             slide.innerHTML = `
               <div class="slide-inner">
@@ -144,10 +133,8 @@
     }
 
     let swiper;
-
     window.addEventListener('load', async () => {
       await preloadImagesAndAppendSlides();
-
       swiper = new Swiper('.swiper', {
         effect: 'coverflow',
         grabCursor: true,
@@ -177,12 +164,9 @@
             this.slideTo(0, 0, false);
             container.style.visibility = 'visible';
             container.classList.add('swiper-loaded');
-
             setTimeout(() => {
               const page1 = document.querySelector('.page1-img');
-              if (page1) {
-                page1.classList.add('page1-breath');
-              }
+              if (page1) page1.classList.add('page1-breath');
             }, 100);
           },
           slideChange: function () {
@@ -205,13 +189,10 @@
     }
 
     function resetZoom() {
-      const allImages = document.querySelectorAll('.swiper-slide img');
-      allImages.forEach(img => {
+      document.querySelectorAll('.swiper-slide img').forEach(img => {
         img.style.transform = 'scale(1) translate(0px, 0px)';
       });
-      scale = 1;
-      offsetX = 0;
-      offsetY = 0;
+      scale = 1; offsetX = 0; offsetY = 0;
       activeImage = null;
       isDragging = false;
       updateSwiperTouchStatus();
@@ -246,7 +227,6 @@
       }
     });
 
-    // --- Panning (Mouse) ---
     document.addEventListener('mousedown', function (e) {
       if (scale === 1) return;
       activeImage = document.querySelector('.swiper-slide-active img');
@@ -267,7 +247,7 @@
       isDragging = false;
     });
 
-    // --- Pinch Zoom + Double Tap Toggle ---
+    // --- Pinch Zoom + Double Tap ---
     let initialDistance = null;
     let touchZoomImage = null;
     let lastTapTime = 0;
@@ -280,11 +260,15 @@
 
     document.addEventListener('touchstart', function (e) {
       const now = new Date().getTime();
+
       if (e.touches.length === 2) {
         initialDistance = getDistance(e.touches);
         touchZoomImage = document.querySelector('.swiper-slide-active img');
       } else if (e.touches.length === 1) {
-        if (now - lastTapTime < 300) {
+        const timeSinceLastTap = now - lastTapTime;
+        lastTapTime = now;
+        if (timeSinceLastTap < 300) {
+          e.preventDefault();  // <- Fixes bounce on double-tap
           const img = document.querySelector('.swiper-slide-active img');
           if (img) {
             scale = scale === 1 ? 2 : 1;
@@ -294,9 +278,8 @@
             updateSwiperTouchStatus();
           }
         }
-        lastTapTime = now;
       }
-    });
+    }, { passive: false }); // <-- Passive false ensures preventDefault works
 
     document.addEventListener('touchmove', function (e) {
       if (e.touches.length === 2 && initialDistance && touchZoomImage) {
